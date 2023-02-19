@@ -394,7 +394,7 @@ public class Normal extends Generator {
 
     @Override
     public void populateChunk(int chunkX, int chunkZ) {
-        this.nukkitRandom.setSeed(0xdeadbeef ^ (chunkX << 8) ^ chunkZ ^ this.level.getSeed());
+        this.nukkitRandom.setSeed(0xdeadbeefL ^ ((long) chunkX << 8) ^ chunkZ ^ this.level.getSeed());
         for (Populator populator : this.populators) {
             populator.populate(this.level, chunkX, chunkZ, this.nukkitRandom);
         }

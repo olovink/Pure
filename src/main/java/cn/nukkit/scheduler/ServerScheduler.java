@@ -272,6 +272,7 @@ public class ServerScheduler {
         // Main heart beat.
         while (isReady(currentTick)) {
             TaskHandler taskHandler = queue.poll();
+            assert taskHandler != null;
             if (taskHandler.isCancelled()) {
                 taskMap.remove(taskHandler.getTaskId());
                 continue;

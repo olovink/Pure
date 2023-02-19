@@ -1,9 +1,9 @@
 package cn.nukkit.level.generator.biome;
 
-import cn.nukkit.level.generator.populator.PopulatorGrass;
-import cn.nukkit.level.generator.populator.PopulatorSugarcane;
-import cn.nukkit.level.generator.populator.PopulatorTallGrass;
-import cn.nukkit.level.generator.populator.PopulatorTallSugarcane;
+import cn.nukkit.block.Block;
+import cn.nukkit.level.generator.populator.*;
+
+import java.util.Arrays;
 
 /**
  * author: MagicDroidX
@@ -13,6 +13,9 @@ public class RiverBiome extends WateryBiome {
 
     public RiverBiome() {
         super();
+
+        PopulatorDisk populatorDiskSand = new PopulatorDisk(1.0, Block.SAND, 2, 4, 2, Arrays.asList(Block.DIRT, Block.GRASS));
+        this.addPopulator(populatorDiskSand);
 
         PopulatorSugarcane sugarcane = new PopulatorSugarcane();
         sugarcane.setBaseAmount(6);

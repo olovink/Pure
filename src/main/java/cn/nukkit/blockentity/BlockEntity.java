@@ -166,13 +166,13 @@ public abstract class BlockEntity extends Position {
     }
 
     public final void scheduleUpdate() {
-        this.level.updateBlockEntities.put(this.id, this);
+        this.level.scheduleBlockEntityUpdate(this);
     }
 
     public void close() {
         if (!this.closed) {
             this.closed = true;
-            this.level.updateBlockEntities.remove(this.id);
+            this.level.updateEntities.remove(this.id);
             if (this.chunk != null) {
                 this.chunk.removeBlockEntity(this);
             }

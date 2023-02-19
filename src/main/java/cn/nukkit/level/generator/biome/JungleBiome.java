@@ -2,6 +2,7 @@ package cn.nukkit.level.generator.biome;
 
 import cn.nukkit.block.Block;
 import cn.nukkit.block.BlockFlower;
+import cn.nukkit.level.generator.populator.JungleFloorPopulator;
 import cn.nukkit.level.generator.populator.PopulatorGrass;
 import cn.nukkit.level.generator.populator.PopulatorFlower;
 import cn.nukkit.level.generator.populator.tree.JungleBigTreePopulator;
@@ -27,6 +28,11 @@ public class JungleBiome extends GrassyBiome {
         flower.addType(Block.RED_FLOWER, BlockFlower.TYPE_AZURE_BLUET);
         flower.addType(Block.RED_FLOWER, BlockFlower.TYPE_RED_TULIP);
         flower.addType(Block.RED_FLOWER, BlockFlower.TYPE_OXEYE_DAISY);
+
+        JungleFloorPopulator floor = new JungleFloorPopulator();
+        floor.setBaseAmount(10);
+        floor.setRandomAmount(5);
+        this.addPopulator(floor);
 
         
         this.addPopulator(grass);

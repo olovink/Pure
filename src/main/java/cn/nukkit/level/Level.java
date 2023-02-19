@@ -54,22 +54,24 @@ import cn.nukkit.timings.LevelTimings;
 import cn.nukkit.utils.*;
 import co.aikar.timings.Timings;
 import co.aikar.timings.TimingsHistory;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * author: MagicDroidX Nukkit Project
  */
 public class Level implements ChunkManager, Metadatable {
 
+
+    public static Level[] EMPTY_ARRAY = new Level[0];
     private static int levelIdCounter = 1;
     private static int chunkLoaderCounter = 1;
     public static int COMPRESSION_LEVEL = 8;
@@ -95,15 +97,11 @@ public class Level implements ChunkManager, Metadatable {
     // Lower values use less memory
     public static final int MAX_BLOCK_CACHE = 512;
 
-    private final Map<Long, BlockEntity> blockEntities = new HashMap<>();
-
-    private final Map<Long, Player> players = new HashMap<>();
-
-    private final Map<Long, Entity> entities = new HashMap<>();
-
-    public final Map<Long, Entity> updateEntities = new HashMap<>();
-
-    public final Map<Long, BlockEntity> updateBlockEntities = new HashMap<>();
+    public final Long2ObjectOpenHashMap<Entity> updateEntities = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<BlockEntity> blockEntities = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<Player> players = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<Entity> entities = new Long2ObjectOpenHashMap<>();
+    private final ConcurrentLinkedQueue<BlockEntity> updateBlockEntities = new ConcurrentLinkedQueue<>();
 
     // Use a weak map to avoid OOM
     private final ConcurrentMap<Object, Object> blockCache = CacheBuilder.newBuilder()
@@ -231,6 +229,7 @@ public class Level implements ChunkManager, Metadatable {
     public int tickRateTime = 0;
     public int tickRateCounter = 0;
 
+
     private Class<? extends Generator> generator;
     private Generator generatorInstance;
 
@@ -263,7 +262,6 @@ public class Level implements ChunkManager, Metadatable {
         } catch (Exception e) {
             throw new LevelException("Caused by " + Utils.getExceptionMessage(e));
         }
-
         this.timings = new LevelTimings(this);
 
         if (convert) {
@@ -799,13 +797,7 @@ public class Level implements ChunkManager, Metadatable {
 
         TimingsHistory.tileEntityTicks += this.updateBlockEntities.size();
         this.timings.blockEntityTick.startTiming();
-        if (!this.updateBlockEntities.isEmpty()) {
-            for (long id : new ArrayList<>(this.updateBlockEntities.keySet())) {
-                if (!this.updateBlockEntities.get(id).onUpdate()) {
-                    this.updateBlockEntities.remove(id);
-                }
-            }
-        }
+        this.updateBlockEntities.removeIf(blockEntity -> !blockEntity.isValid() || !blockEntity.onUpdate());
         this.timings.blockEntityTick.stopTiming();
 
         this.timings.tickChunks.startTiming();
@@ -2169,6 +2161,11 @@ public class Level implements ChunkManager, Metadatable {
         return this.getChunk(x >> 4, z >> 4, true).getBlockId(x & 0x0f, y & 0xff, z & 0x0f);
     }
 
+    public void setBlockAt(int x, int y, int z, int id, int meta) {
+        this.setBlockIdAt(x, y, z, id);
+        this.setBlockDataAt(x, y, z, meta);
+    }
+
     @Override
     public void setBlockIdAt(int x, int y, int z, int id) {
         this.blockCache.remove(Level.blockHash(x, y, z));
@@ -2179,6 +2176,78 @@ public class Level implements ChunkManager, Metadatable {
             loader.onBlockChanged(temporalVector);
         }
     }
+
+    public List<CompletableFuture<Void>> asyncChunkGarbageCollection() {
+        this.timings.doChunkGC.startTiming();
+        var gcBlockEntities = CompletableFuture.runAsync(() -> {
+            // remove all invaild block entities.
+            if (!blockEntities.isEmpty()) {
+                ObjectIterator<BlockEntity> iter = blockEntities.values().iterator();
+                while (iter.hasNext()) {
+                    BlockEntity blockEntity = iter.next();
+                    if (blockEntity != null) {
+                        if (!blockEntity.isValid()) {
+                            iter.remove();
+                            blockEntity.close();
+                        }
+                    } else {
+                        iter.remove();
+                    }
+                }
+            }
+        });
+        var gcDeadChunks = CompletableFuture.runAsync(() -> {
+            for (Map.Entry<Long, ? extends FullChunk> entry : provider.getLoadedChunks().entrySet()) {
+                long index = entry.getKey();
+                if (!this.unloadQueue.containsKey(index)) {
+                    FullChunk chunk = entry.getValue();
+                    int X = chunk.getX();
+                    int Z = chunk.getZ();
+                    if (!this.isSpawnChunk(X, Z)) {
+                        this.unloadChunkRequest(X, Z, true);
+                    }
+                }
+            }
+        });
+        var gcSuper = CompletableFuture.runAsync(() -> this.provider.doGarbageCollection());
+        this.timings.doChunkGC.stopTiming();
+        return List.of(gcBlockEntities, gcDeadChunks, gcSuper);
+    }
+
+    public void doChunkGarbageCollection() {
+        this.timings.doChunkGC.startTiming();
+        // remove all invaild block entities.
+        if (!blockEntities.isEmpty()) {
+            ObjectIterator<BlockEntity> iter = blockEntities.values().iterator();
+            while (iter.hasNext()) {
+                BlockEntity blockEntity = iter.next();
+                if (blockEntity != null) {
+                    if (!blockEntity.isValid()) {
+                        iter.remove();
+                        blockEntity.close();
+                    }
+                } else {
+                    iter.remove();
+                }
+            }
+        }
+
+        for (Map.Entry<Long, ? extends FullChunk> entry : provider.getLoadedChunks().entrySet()) {
+            long index = entry.getKey();
+            if (!this.unloadQueue.containsKey(index)) {
+                FullChunk chunk = entry.getValue();
+                int X = chunk.getX();
+                int Z = chunk.getZ();
+                if (!this.isSpawnChunk(X, Z)) {
+                    this.unloadChunkRequest(X, Z, true);
+                }
+            }
+        }
+
+        this.provider.doGarbageCollection();
+        this.timings.doChunkGC.stopTiming();
+    }
+
 
     public int getBlockExtraDataAt(int x, int y, int z) {
         return this.getChunk(x >> 4, z >> 4, true).getBlockExtraData(x & 0x0f, y & 0xff, z & 0x0f);
@@ -2507,16 +2576,21 @@ public class Level implements ChunkManager, Metadatable {
             throw new LevelException("Invalid Block Entity level");
         }
         blockEntities.put(blockEntity.getId(), blockEntity);
-        this.clearChunkCache((int) blockEntity.getX() >> 4, (int) blockEntity.getZ() >> 4);
     }
 
-    public void removeBlockEntity(BlockEntity blockEntity) {
-        if (blockEntity.getLevel() != this) {
-            throw new LevelException("Invalid Block Entity level");
+    public void scheduleBlockEntityUpdate(BlockEntity entity) {
+        Preconditions.checkNotNull(entity, "entity");
+        Preconditions.checkArgument(entity.getLevel() == this, "BlockEntity is not in this level");
+        if (!updateBlockEntities.contains(entity)) {
+            updateBlockEntities.add(entity);
         }
-        blockEntities.remove(blockEntity.getId());
-        updateBlockEntities.remove(blockEntity.getId());
-        this.clearChunkCache((int) blockEntity.getX() >> 4, (int) blockEntity.getZ() >> 4);
+    }
+
+    public void removeBlockEntity(BlockEntity entity) {
+        Preconditions.checkNotNull(entity, "entity");
+        Preconditions.checkArgument(entity.getLevel() == this, "BlockEntity is not in this level");
+        blockEntities.remove(entity.getId());
+        updateBlockEntities.remove(entity);
     }
 
     public boolean isChunkInUse(int x, int z) {
@@ -2840,42 +2914,6 @@ public class Level implements ChunkManager, Metadatable {
         this.cancelUnloadChunkRequest(x, z);
 
         this.generateChunk(x, z);
-    }
-
-    public void doChunkGarbageCollection() {
-        this.timings.doChunkGC.startTiming();
-        // remove all invaild block entities.
-        List<BlockEntity> toClose = new ArrayList<>();
-        for (BlockEntity anBlockEntity : blockEntities.values()) {
-            if (anBlockEntity == null)
-                continue;
-            if (anBlockEntity.isBlockEntityValid())
-                continue;
-            toClose.add(anBlockEntity);
-        }
-        for (BlockEntity be : toClose.toArray(new BlockEntity[toClose.size()])) {
-            be.close();
-        }
-
-        for (Long index : this.chunks.keySet()) {
-
-            if (!this.unloadQueue.containsKey(index)) {
-                int X = getHashX(index);
-                int Z = getHashZ(index);
-                if (!this.isSpawnChunk(X, Z)) {
-                    this.unloadChunkRequest(X, Z, true);
-                }
-            }
-        }
-
-        for (FullChunk chunk : new ArrayList<>(this.provider.getLoadedChunks().values())) {
-            if (!this.chunks.containsKey(Level.chunkHash(chunk.getX(), chunk.getZ()))) {
-                this.provider.unloadChunk(chunk.getX(), chunk.getZ(), false);
-            }
-        }
-
-        this.provider.doGarbageCollection();
-        this.timings.doChunkGC.stopTiming();
     }
 
     public void unloadChunks() {

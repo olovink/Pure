@@ -17,25 +17,28 @@ public class NewJungleTree extends TreeGenerator {
      */
     private final int minTreeHeight;
 
+    private final int maxTreeHeight;
+
     /**
      * The metadata value of the wood to use in tree generation.
      */
-    private final Block metaWood = new BlockWood(BlockWood.JUNGLE);
+    private final Block metaWood = Block.get(Block.WOOD, BlockWood.JUNGLE);
 
     /**
      * The metadata value of the leaves to use in tree generation.
      */
-    private final Block metaLeaves = new BlockLeaves(BlockLeaves.JUNGLE);
+    private final Block metaLeaves = Block.get(Block.LEAVES, BlockLeaves.JUNGLE);
 
-    public NewJungleTree(int minTreeHeight) {
+    public NewJungleTree(int minTreeHeight, int maxTreeHeight) {
         this.minTreeHeight = minTreeHeight;
+        this.maxTreeHeight = maxTreeHeight;
     }
 
     @Override
     public boolean generate(ChunkManager worldIn, NukkitRandom rand, Vector3 vectorPosition) {
         BlockVector3 position = new BlockVector3(vectorPosition.getFloorX(), vectorPosition.getFloorY(), vectorPosition.getFloorZ());
 
-        int i = rand.nextBoundedInt(3) + this.minTreeHeight;
+        int i = rand.nextBoundedInt(maxTreeHeight) + this.minTreeHeight;
         boolean flag = true;
 
         if (position.getY() >= 1 && position.getY() + i + 1 <= 256) {
@@ -189,7 +192,7 @@ public class NewJungleTree extends TreeGenerator {
     }
 
     private void addVine(ChunkManager worldIn, BlockVector3 pos, int meta) {
-        this.setBlockAndNotifyAdequately(worldIn, pos, new BlockVine(meta));
+        this.setBlockAndNotifyAdequately(worldIn, pos, Block.get(Block.VINE, meta));
     }
 
     private void addHangingVine(ChunkManager worldIn, BlockVector3 pos, int meta) {
@@ -207,9 +210,7 @@ public class NewJungleTree extends TreeGenerator {
     }
 
     private int getCocoaMeta(int age, int side) {
-        int meta = 0;
-
-        meta *= age;
+        int meta = age * 4;
 
         //3 4 2 5
         switch (side) {

@@ -65,6 +65,7 @@ import cn.nukkit.resourcepacks.ResourcePackManager;
 import cn.nukkit.scheduler.FileWriteTask;
 import cn.nukkit.scheduler.ServerScheduler;
 import cn.nukkit.console.RootiConsole;
+import cn.nukkit.scheduler.Task;
 import cn.nukkit.utils.*;
 import co.aikar.timings.Timings;
 import com.google.common.base.Preconditions;
@@ -73,6 +74,7 @@ import lombok.extern.log4j.Log4j2;
 import java.io.*;
 import java.nio.ByteOrder;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author MagicDroidX
@@ -80,6 +82,31 @@ import java.util.*;
  */
 @Log4j2
 public class Server {
+
+    private final Map<Integer, Level> levels = new HashMap<Integer, Level>() {
+        @Override
+        public Level put(Integer key, Level value) {
+            Level result = super.put(key, value);
+            levelArray = levels.values().toArray(Level.EMPTY_ARRAY);
+            return result;
+        }
+
+        @Override
+        public boolean remove(Object key, Object value) {
+            boolean result = super.remove(key, value);
+            levelArray = levels.values().toArray(Level.EMPTY_ARRAY);
+            return result;
+        }
+
+        @Override
+        public Level remove(Object key) {
+            Level result = super.remove(key);
+            levelArray = levels.values().toArray(Level.EMPTY_ARRAY);
+            return result;
+        }
+    };
+
+    private Level[] levelArray;
 
     public static final String BROADCAST_CHANNEL_ADMINISTRATIVE = "nukkit.broadcast.admin";
     public static final String BROADCAST_CHANNEL_USERS = "nukkit.broadcast.user";
@@ -185,8 +212,6 @@ public class Server {
 
     private final Map<Integer, String> identifier = new HashMap<>();
 
-    private final Map<Integer, Level> levels = new HashMap<>();
-
     private final ServiceManager serviceManager = new NKServiceManager();
 
     private Level defaultLevel = null;
@@ -194,6 +219,8 @@ public class Server {
     private Thread currentThread;
     
     Server(final String filePath, String dataPath, String pluginPath) {
+
+        levelArray = Level.EMPTY_ARRAY;
         Preconditions.checkState(instance == null, "Already initialized!");
         this.logger = MainLogger.getLogger();
         currentThread = Thread.currentThread(); // Saves the current thread instance as a reference, used in Server#isPrimaryThread()
@@ -666,7 +693,7 @@ public class Server {
 
         log.info("Saving levels...");
 
-        for (Level level : this.levels.values()) {
+        for (Level level : this.levelArray) {
             level.save();
         }
 
@@ -748,7 +775,7 @@ public class Server {
             }
 
             this.getLogger().debug("Unloading all levels");
-            for (Level level : new ArrayList<>(this.getLevels().values())) {
+            for (Level level : this.levelArray) {
                 this.unloadLevel(level, true);
             }
 
@@ -811,7 +838,17 @@ public class Server {
         }
     }
 
+    int lastLevelGC;
+
     public void tickProcessor() {
+        getScheduler().scheduleDelayedTask(new Task() {
+            @Override
+            public void onRun(int currentTick) {
+                System.runFinalization();
+                System.gc();
+            }
+        }, 60);
+
         this.nextTick = System.currentTimeMillis();
         try {
             while (this.isRunning) {
@@ -822,16 +859,32 @@ public class Server {
                     long current = System.currentTimeMillis();
 
                     if (next - 0.1 > current) {
-                        Thread.sleep(next - current - 1, 900000);
+                        long allocated = next - current - 1;
+
+                        { // Instead of wasting time, do something potentially useful
+                            int offset = 0;
+                            for (int i = 0; i < levelArray.length; i++) {
+                                offset = (i + lastLevelGC) % levelArray.length;
+                                Level level = levelArray[offset];
+                                level.getProvider().doGarbageCollection();
+                                allocated = next - System.currentTimeMillis();
+                                if (allocated <= 0) {
+                                    break;
+                                }
+                            }
+                            lastLevelGC = offset + 1;
+                        }
+
+                        if (allocated > 0) {
+                            Thread.sleep(allocated, 900000);
+                        }
                     }
                 } catch (RuntimeException e) {
-                    this.getLogger().logException(e);
+                    log.error("A RuntimeException happened while ticking the server", e);
                 }
             }
         } catch (Throwable e) {
-            log.fatal("Exception happened while ticking server");
-            log.warn(Utils.getExceptionMessage(e));
-            log.warn(Utils.getAllThreadDumps());
+            log.fatal("Exception happened while ticking server\n{}", Utils.getAllThreadDumps(), e);
         }
     }
 
@@ -947,7 +1000,7 @@ public class Server {
         }
 
         //Do level ticks
-        for (Level level : this.getLevels().values()) {
+        for (Level level : this.levelArray) {
             if (level.getTickRate() > this.baseTickRate && --level.tickRateCounter > 0) {
                 continue;
             }
@@ -999,7 +1052,7 @@ public class Server {
                 }
             }
 
-            for (Level level : this.getLevels().values()) {
+            for (Level level : this.levelArray) {
                 level.save();
             }
             Timings.levelSaveTimer.stopTiming();
@@ -1065,10 +1118,9 @@ public class Server {
         }
 
         if (this.tickCounter % 100 == 0) {
-            for (Level level : this.levels.values()) {
-                level.clearCache();
-                level.doChunkGarbageCollection();
-            }
+            CompletableFuture.allOf(Arrays.stream(this.levelArray).parallel()
+                    .flatMap(l -> l.asyncChunkGarbageCollection().stream())
+                    .toArray(CompletableFuture[]::new));
         }
 
         Timings.fullServerTickTimer.stopTiming();
@@ -1195,7 +1247,7 @@ public class Server {
 
     public void setAutoSave(boolean autoSave) {
         this.autoSave = autoSave;
-        for (Level level : this.getLevels().values()) {
+        for (Level level : this.levelArray) {
             level.setAutoSave(this.autoSave);
         }
     }
@@ -1556,7 +1608,7 @@ public class Server {
     }
 
     public Level getLevelByName(String name) {
-        for (Level level : this.getLevels().values()) {
+        for (Level level : this.levelArray) {
             if (level.getFolderName().equals(name)) {
                 return level;
             }

@@ -42,10 +42,10 @@ import java.util.Scanner;
 @Log4j2
 public class Nukkit {
 
-    public final static String NAME = "Rooti-java";
-    public final static String VERSION = "1.0.1+alpha";
+    public final static String NAME = "Pure";
+    public final static String VERSION = "1.0.2";
     public final static String API_VERSION = "1.0.0";
-    public final static String CODENAME = "Rooti contributors & Nukkit";
+    public final static String CODENAME = "PureTeam";
     @Deprecated
     public final static String MINECRAFT_VERSION = ProtocolInfo.MINECRAFT_VERSION;
     @Deprecated
@@ -97,7 +97,7 @@ public class Nukkit {
 
         try {
             if (TITLE) {
-                System.out.print((char) 0x1b + "]0;Starting Rooti Server For Minecraft: PE" + (char) 0x07);
+                System.out.print((char) 0x1b + "]0;Starting Server For Minecraft: PE" + (char) 0x07);
             }
             new Server(PATH, DATA_PATH, PLUGIN_PATH);
         } catch (Throwable t) {

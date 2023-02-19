@@ -97,42 +97,7 @@ public class Nether extends Generator {
 
     @Override
     public void generateChunk(int chunkX, int chunkZ) {
-        this.nukkitRandom.setSeed(chunkX * localSeed1 ^ chunkZ * localSeed2 ^ this.level.getSeed());
 
-        double[][][] noise = Generator.getFastNoise3D(this.noiseBase, 16, 128, 16, 4, 8, 4, chunkX * 16, 0, chunkZ * 16);
-        FullChunk chunk = this.level.getChunk(chunkX, chunkZ);
-
-        for (int x = 0; x < 16; ++x) {
-            for (int z = 0; z < 16; ++z) {
-                Biome biome = Biome.getBiome(Biome.HELL);
-                chunk.setBiomeId(x, z, Biome.HELL);
-                int biomecolor = biome.getColor();
-                chunk.setBiomeColor(x, z, (biomecolor >> 16), (biomecolor >> 8) & 0xff, (biomecolor & 0xff));
-
-                chunk.setBlockId(x, 0, z, Block.BEDROCK);
-                chunk.setBlockId(x, 127, z, Block.BEDROCK);
-
-                for (int y = 1; y <= bedrockDepth; y++) {
-                    if (nukkitRandom.nextRange(1, 5) == 1) {
-                        chunk.setBlockId(x, y, z, Block.BEDROCK);
-                        chunk.setBlockId(x, 127 - y, z, Block.BEDROCK);
-                    }
-                }
-                for (int y = 1; y < 127; ++y) {
-                    double noiseValue = (Math.abs(this.emptyHeight - y) / this.emptyHeight) * this.emptyAmplitude - noise[x][z][y];
-                    noiseValue -= 1 - this.density;
-                    if (noiseValue > 0) {
-                        chunk.setBlockId(x, y, z, Block.NETHERRACK);
-                    } else if (y <= this.waterHeight) {
-                        chunk.setBlockId(x, y, z, Block.STILL_LAVA);
-                        chunk.setBlockLight(x, y + 1, z, 15);
-                    }
-                }
-            }
-        }
-        for (Populator populator : this.generationPopulators) {
-            populator.populate(this.level, chunkX, chunkZ, this.nukkitRandom);
-        }
     }
 
     @Override

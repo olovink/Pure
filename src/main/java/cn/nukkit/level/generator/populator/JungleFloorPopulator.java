@@ -1,25 +1,25 @@
-package cn.nukkit.level.generator.populator.tree;
+package cn.nukkit.level.generator.populator;
 
 import cn.nukkit.block.Block;
 import cn.nukkit.block.BlockSapling;
 import cn.nukkit.level.ChunkManager;
+import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.generator.object.tree.NewJungleTree;
-import cn.nukkit.level.generator.populator.Populator;
 import cn.nukkit.math.NukkitMath;
 import cn.nukkit.math.NukkitRandom;
 import cn.nukkit.math.Vector3;
 
-public class JungleTreePopulator extends Populator {
+public class JungleFloorPopulator extends Populator {
     private final int type;
     private ChunkManager level;
     private int randomAmount;
     private int baseAmount;
 
-    public JungleTreePopulator() {
+    public JungleFloorPopulator() {
         this(BlockSapling.JUNGLE);
     }
 
-    public JungleTreePopulator(int type) {
+    public JungleFloorPopulator(int type) {
         this.type = type;
     }
 
@@ -44,7 +44,7 @@ public class JungleTreePopulator extends Populator {
             if (y == -1) {
                 continue;
             }
-            new NewJungleTree(4 + random.nextBoundedInt(7), 3).generate(level, random, v.setComponents(x, y, z));
+            new NewJungleTree(1, 0).generate(level, random, v.setComponents(x, y, z));
         }
     }
 

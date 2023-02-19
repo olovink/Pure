@@ -12,6 +12,11 @@ public class PlainBiome extends GrassyBiome {
 
     public PlainBiome() {
         super();
+        PopulatorPumpkin pumpkin = new PopulatorPumpkin();
+        pumpkin.setBaseAmount(-2000);
+        pumpkin.setRandomAmount(2015);
+        this.addPopulator(pumpkin);
+
         PopulatorSugarcane sugarcane = new PopulatorSugarcane();
         sugarcane.setBaseAmount(6);
         PopulatorTallSugarcane tallSugarcane = new PopulatorTallSugarcane();

@@ -1,6 +1,6 @@
 plugins {
     java
-    `maven-publish`
+    id("maven-publish")
     id("com.github.johnrengelman.shadow")
 }
 
@@ -15,6 +15,7 @@ dependencies {
     implementation("jline:jline:2.14.6")
     implementation("net.sf.jopt-simple:jopt-simple:5.0.4")
     implementation("net.minecrell:terminalconsoleappender:1.1.1")
+    implementation("it.unimi.dsi:fastutil:8.5.11")
     implementation("org.jline:jline-reader:3.21.0")
     implementation("org.jline:jline-terminal-jna:3.21.0")
     implementation("org.jline:jline-terminal:3.21.0")
@@ -30,7 +31,7 @@ dependencies {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 
     withSourcesJar()
     // withJavadocJar() // @ddosnikgit cleanun javadoc's please
@@ -50,53 +51,23 @@ tasks {
     withType<JavaCompile> { options.encoding = "UTF-8" }
 }
 
-
-    publishing {
-        publications {
-            create<MavenPublication>("mavenJava") {
-                artifactId = "Pure"
-                groupId = "com.purenex"
-                version = "0.0.1"
-                from(components["java"])
-                pom {
-                    packaging = "jar"
-                    name.set("Pure")
-                    url.set("https://github.com/turbomates/super-project")
-                    description.set("Some description")
-
-                    licenses {
-                        license {
-                            name.set("The Apache License, Version 2.0")
-                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                        }
-                    }
-
-                    scm {
-                        connection.set("scm:https://github.com/turbomates/super-puper-project.git")
-                        developerConnection.set("scm:git@github.com:turbomates/super-puper-project.git")
-                        url.set("https://github.com/turbomates/super-puper-project")
-                    }
-
-                    developers {
-                        developer {
-                            id.set("Olovink")
-                            name.set("Egor Tunekov")
-                            email.set("egortunekov98@gmail.com")
-                        }
-                    }
-                }
-            }
-        }
-        repositories {
-            maven {
-                val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-                url = if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
-                credentials {
-                    username = project.properties["ossrhUsername"].toString()
-                    password = project.properties["ossrhPassword"].toString()
-                }
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/olovink/Pure")
+            credentials {
+                username = "olovink"
+                password = "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"
             }
         }
     }
+    publications {
+        register<MavenPublication>("gpr") {
+            from(components["java"])
+        }
+    }
+}
+
+
 
