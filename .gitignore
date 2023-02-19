@@ -1,0 +1,16 @@
+.gradle
+build
+
+/.idea
+
+hs_err_pid*
+replay_pid*
+
+*.jar
+!gradle-wrapper.jar
+!libs/*
+*.zip
+*.tar.gz
+*.log
+*.class
+.DS_Store
