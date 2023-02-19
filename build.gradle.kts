@@ -52,16 +52,6 @@ tasks {
 }
 
 publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/olovink/Pure")
-            credentials {
-                username = "olovink"
-                password = "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"
-            }
-        }
-    }
     publications {
         register<MavenPublication>("gpr") {
             from(components["java"])
