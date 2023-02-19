@@ -507,7 +507,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         Map<String, CommandDataVersions> data = new HashMap<>();
         int count = 0;
         for (Command command : this.server.getCommandMap().getCommands().values()) {
-            if (!command.testPermissionSilent(this) || !command.isRegistered()) {
+            if (!command.testPermissionSilent(this)) {
                 continue;
             }
             ++count;
@@ -515,8 +515,19 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             data.put(command.getName(), data0);
         }
         if (count > 0) {
-            pk.commands = data.toString();
-            this.dataPacket(pk);
+            pk.commands = new Gson().toJson(data);
+            int identifier = this.dataPacket(pk, true); // We *need* ACK so we can be sure that the client received the packet or not
+            Thread t = new Thread(() -> {
+                // We are going to wait 3 seconds, if after 3 seconds we didn't receive a reply from the client, resend the packet.
+                try {
+                    Thread.sleep(3000);
+                    boolean status = needACK.get(identifier);
+                    if (!status && isOnline()) {
+                        sendCommandData();
+                    }
+                } catch (InterruptedException ignored) {}
+            });
+            t.start();
         }
     }
 

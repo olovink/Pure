@@ -2,6 +2,23 @@ package cn.nukkit.level.generator.biome;
 
 import cn.nukkit.block.Block;
 import cn.nukkit.level.ChunkManager;
+import cn.nukkit.level.generator.biome.impl.beach.BeachBiome;
+import cn.nukkit.level.generator.biome.impl.desert.DesertBiome;
+import cn.nukkit.level.generator.biome.impl.forest.ForestBiome;
+import cn.nukkit.level.generator.biome.impl.hell.HellBiome;
+import cn.nukkit.level.generator.biome.impl.hills.MountainsBiome;
+import cn.nukkit.level.generator.biome.impl.hills.SmallMountainsBiome;
+import cn.nukkit.level.generator.biome.impl.iceplains.IcePlainsBiome;
+import cn.nukkit.level.generator.biome.impl.jungle.JungleBiome;
+import cn.nukkit.level.generator.biome.impl.mushroom.MushroomIsland;
+import cn.nukkit.level.generator.biome.impl.ocean.OceanBiome;
+import cn.nukkit.level.generator.biome.impl.plains.PlainBiome;
+import cn.nukkit.level.generator.biome.impl.river.RiverBiome;
+import cn.nukkit.level.generator.biome.impl.roofedforest.RoofedForestBiome;
+import cn.nukkit.level.generator.biome.impl.roofedforest.RoofedForestMBiome;
+import cn.nukkit.level.generator.biome.impl.savanna.SavannaBiome;
+import cn.nukkit.level.generator.biome.impl.swamp.SwampBiome;
+import cn.nukkit.level.generator.biome.impl.taiga.TaigaBiome;
 import cn.nukkit.level.generator.populator.Populator;
 import cn.nukkit.math.NukkitRandom;
 
@@ -47,7 +64,6 @@ public abstract class Biome {
     private static final Biome[] biomes = new Biome[MAX_BIOMES];
 
     private int id;
-    private boolean registered = false;
 
     private final ArrayList<Populator> populators = new ArrayList<>();
 

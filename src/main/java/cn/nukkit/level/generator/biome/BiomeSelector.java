@@ -26,7 +26,9 @@ public class BiomeSelector {
     }
 
     public int lookup(double temperature, double rainfall) {
-        if (rainfall < 0.25) {
+        if (rainfall < 0) {
+            return Biome.PLAINS;
+        } else if (rainfall < 0.25) {
             return Biome.SWAMP;
         } else if (rainfall < 0.60) {
             if (temperature < 0.25) {
@@ -42,12 +44,11 @@ public class BiomeSelector {
             } else {
                 return Biome.FOREST;
             }
+        } else if (rainfall > 1.0) {
+            return Biome.JUNGLE;
         } else {
-            if (rainfall < 1.0) {
-                return Biome.JUNGLE;
-            }
+            return Biome.ROOFED_FOREST;
         }
-        return Biome.PLAINS;
     }
 
     public void recalculate() {
@@ -60,7 +61,7 @@ public class BiomeSelector {
     }
 
     public void addBiome(Biome biome) {
-        this.biomes.put(Integer.valueOf(biome.getId()), biome);
+        this.biomes.put(biome.getId(), biome);
     }
 
     public double getTemperature(double x, double z) {
@@ -76,7 +77,7 @@ public class BiomeSelector {
         int rainfall = (int) (this.getRainfall(x, z) * 63);
 
         int biomeId = this.map[temperature + (rainfall << 6)];
-        return this.biomes.containsKey(biomeId) ? this.biomes.get(biomeId) : this.fallback;
+        return this.biomes.getOrDefault(biomeId, this.fallback);
     }
 
 }
