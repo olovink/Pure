@@ -1,6 +1,7 @@
 # Pure
 Software for Minecraft Bedrock Edition 1.1.x forked Nukkit.
-[![Gradle Package](https://github.com/olovink/Pure/actions/workflows/gradle-publish.yml/badge.svg?branch=master)](https://github.com/olovink/Pure/actions/workflows/gradle-publish.yml)
+
+[![](https://jitpack.io/v/olovink/Pure.svg)](https://jitpack.io/#olovink/Pure)
 Java 8 installation
 -------------
 - `sudo apt-get update && sudo apt-get install default-jdk`
