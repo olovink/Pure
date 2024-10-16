@@ -15,30 +15,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-import java.util.Scanner;
-/**
-*
-* ╭━━━╮╱╱╱╱╱╭╮
-* ┃╭━╮┃╱╱╱╱╭╯╰╮
-* ┃╰━╯┣━━┳━┻╮╭╋╮
-* ┃╭╮╭┫╭╮┃╭╮┃┃┣┫
-* ┃┃┃╰┫╰╯┃╰╯┃╰┫┃
-* ╰╯╰━┻━━┻━━┻━┻╯
- */
-
-/**
- * Nukkit启动类，包含{@code main}函数。<br>
- * The launcher class of Nukkit, including the {@code main} function.
- *
- * @author MagicDroidX(code) @ Nukkit Project
- * @author RootiTeam @ Rooti Project
- * @author 粉鞋大妈(javadoc) @ Nukkit Project
- * @since Nukkit 1.0 | Nukkit API 1.0.0
- */
 @Log4j2
 public class Nukkit {
 

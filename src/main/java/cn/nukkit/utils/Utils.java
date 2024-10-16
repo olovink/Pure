@@ -6,7 +6,10 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * author: MagicDroidX
@@ -159,6 +162,32 @@ public class Utils {
             }
         }
         return true;
+    }
+
+    public static <T,U,V> Map<U,V> getOrCreate(Map<T, Map<U, V>> map, T key) {
+        Map<U, V> existing = map.get(key);
+        if (existing == null) {
+            ConcurrentHashMap<U, V> toPut = new ConcurrentHashMap<>();
+            existing = map.putIfAbsent(key, toPut);
+            if (existing == null) {
+                existing = toPut;
+            }
+        }
+        return existing;
+    }
+
+    public static <T, U, V extends U> U getOrCreate(Map<T, U> map, Class<V> clazz, T key) {
+        U existing = map.get(key);
+        if (existing != null) {
+            return existing;
+        }
+        try {
+            U toPut = clazz.newInstance();
+            existing = map.putIfAbsent(key, toPut);
+            return Objects.requireNonNullElse(existing, toPut);
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static long toRGB(byte r, byte g, byte b, byte a) {

@@ -3,14 +3,12 @@ package cn.nukkit.scheduler;
 import cn.nukkit.block.Block;
 import cn.nukkit.level.Level;
 import cn.nukkit.math.AxisAlignedBB;
+import cn.nukkit.math.NukkitMath;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.utils.BlockUpdateEntry;
 import com.google.common.collect.Maps;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 
 public class BlockUpdateScheduler {
     private final Level level;
@@ -50,12 +48,18 @@ public class BlockUpdateScheduler {
             lastTick = tick;
             Set<BlockUpdateEntry> updates = pendingUpdates = queuedUpdates.remove(tick);
             if (updates != null) {
-                for (BlockUpdateEntry entry : updates) {
-                    if (level.isAreaLoaded(new AxisAlignedBB(entry.pos, entry.pos))) {
+                Iterator<BlockUpdateEntry> updateIterator = updates.iterator();
+
+                while (updateIterator.hasNext()) {
+                    BlockUpdateEntry entry = updateIterator.next();
+
+                    Vector3 pos = entry.pos;
+                    if (level.isChunkLoaded(NukkitMath.floorDouble(pos.x) >> 4, NukkitMath.floorDouble(pos.z) >> 4)) {
                         Block block = level.getBlock(entry.pos);
 
+                        updateIterator.remove();
                         if (Block.equals(block, entry.block, false)) {
-                            block.onUpdate(level.BLOCK_UPDATE_SCHEDULED);
+                            block.onUpdate(Level.BLOCK_UPDATE_SCHEDULED);
                         }
                     } else {
                         level.scheduleUpdate(entry.block, entry.pos, 0);
@@ -66,6 +70,7 @@ public class BlockUpdateScheduler {
             pendingUpdates = null;
         }
     }
+
 
     public Set<BlockUpdateEntry> getPendingBlockUpdates(AxisAlignedBB boundingBox) {
         Set<BlockUpdateEntry> set = null;

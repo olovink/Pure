@@ -9,45 +9,49 @@ import java.util.LinkedList;
  * Nukkit Project
  */
 public class AsyncWorker extends Thread implements InterruptibleThread {
-    private final LinkedList<AsyncTask> stack = new LinkedList<>();
+    private final LinkedList<AsyncTask> taskQueue = new LinkedList<>();
 
     public AsyncWorker() {
         this.setName("Asynchronous Worker");
     }
 
-    public void stack(AsyncTask task) {
-        synchronized (stack) {
-            stack.addFirst(task);
+    public void addTask(AsyncTask task) {
+        synchronized (taskQueue) {
+            taskQueue.addFirst(task);
         }
     }
 
-    public void unstack() {
-        synchronized (stack) {
-            stack.clear();
+    public void clearTasks() {
+        synchronized (taskQueue) {
+            taskQueue.clear();
         }
     }
 
-    public void unstack(AsyncTask task) {
-        synchronized (stack) {
-            stack.remove(task);
+    public void removeTask(AsyncTask task) {
+        synchronized (taskQueue) {
+            taskQueue.remove(task);
         }
     }
 
+    @Override
     public void run() {
-        while (true) {
-            synchronized (stack) {
-                for (AsyncTask task : stack) {
-                    if (!task.isFinished()) {
-                        task.run();
-                    }
+        while (!Thread.currentThread().isInterrupted()) {
+            processTasks();
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted status
+            }
+        }
+    }
+
+    private void processTasks() {
+        synchronized (taskQueue) {
+            for (AsyncTask task : taskQueue) {
+                if (!task.isFinished()) {
+                    task.run();
                 }
             }
-            try {
-                sleep(5);
-            } catch (InterruptedException e) {
-                //igonre
-            }
         }
     }
-
 }

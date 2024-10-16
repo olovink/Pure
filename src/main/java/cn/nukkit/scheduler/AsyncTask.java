@@ -12,12 +12,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public abstract class AsyncTask implements Runnable {
 
-    public static final Queue<AsyncTask> FINISHED_LIST = new ConcurrentLinkedQueue<>();
+    private static final Queue<AsyncTask> FINISHED_LIST = new ConcurrentLinkedQueue<>();
 
     private Object result;
     private int taskId;
-    private boolean finished = false;
+    private boolean finished;
 
+    @Override
     public void run() {
         this.result = null;
         this.onRun();
@@ -26,15 +27,15 @@ public abstract class AsyncTask implements Runnable {
     }
 
     public boolean isFinished() {
-        return this.finished;
+        return finished;
     }
 
     public Object getResult() {
-        return this.result;
+        return result;
     }
 
     public boolean hasResult() {
-        return this.result != null;
+        return result != null;
     }
 
     public void setResult(Object result) {
@@ -46,15 +47,15 @@ public abstract class AsyncTask implements Runnable {
     }
 
     public int getTaskId() {
-        return this.taskId;
+        return taskId;
     }
 
     public Object getFromThreadStore(String identifier) {
-        return this.isFinished() ? null : ThreadStore.store.get(identifier);
+        return isFinished() ? null : ThreadStore.store.get(identifier);
     }
 
     public void saveToThreadStore(String identifier, Object value) {
-        if (!this.isFinished()) {
+        if (!isFinished()) {
             if (value == null) {
                 ThreadStore.store.remove(identifier);
             } else {
@@ -66,7 +67,7 @@ public abstract class AsyncTask implements Runnable {
     public abstract void onRun();
 
     public void onCompletion(Server server) {
-
+        // Optional: Implement any cleanup or finalization logic here
     }
 
     public void cleanObject() {
@@ -77,8 +78,8 @@ public abstract class AsyncTask implements Runnable {
 
     public static void collectTask() {
         Timings.schedulerAsyncTimer.startTiming();
-        while (!FINISHED_LIST.isEmpty()) {
-            AsyncTask task = FINISHED_LIST.poll();
+        AsyncTask task;
+        while ((task = FINISHED_LIST.poll()) != null) {
             try {
                 task.onCompletion(Server.getInstance());
             } catch (Exception e) {
@@ -89,5 +90,4 @@ public abstract class AsyncTask implements Runnable {
         }
         Timings.schedulerAsyncTimer.stopTiming();
     }
-
 }

@@ -1158,10 +1158,16 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         this.gamemode = gamemode;
 
         if (this.isSpectator()) {
+            this.onGround = false;
             this.keepMovement = true;
+            this.getAdventureSettings().setFlying(true);
+            this.teleport(this.temporalVector.setComponents(this.x, this.y + 0.1, this.z));
             this.despawnFromAll();
         } else {
             this.keepMovement = false;
+            if (this.isSurvival()) {
+                this.getAdventureSettings().setFlying(false);
+            }
             this.spawnToAll();
         }
 
@@ -1176,21 +1182,15 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         this.setAdventureSettings(ev.getNewAdventureSettings());
 
         if (this.isSpectator()) {
-            this.getAdventureSettings().setFlying(true);
-            this.teleport(this.temporalVector.setComponents(this.x, this.y + 0.1, this.z));
-
             ContainerSetContentPacket containerSetContentPacket = new ContainerSetContentPacket();
             containerSetContentPacket.windowid = ContainerSetContentPacket.SPECIAL_CREATIVE;
             containerSetContentPacket.eid = this.id;
             this.dataPacket(containerSetContentPacket);
         } else {
-            if (this.isSurvival()) {
-                this.getAdventureSettings().setFlying(false);
-            }
             ContainerSetContentPacket containerSetContentPacket = new ContainerSetContentPacket();
             containerSetContentPacket.windowid = ContainerSetContentPacket.SPECIAL_CREATIVE;
             containerSetContentPacket.eid = this.id;
-            containerSetContentPacket.slots = Item.getCreativeItems().stream().toArray(Item[]::new);
+            containerSetContentPacket.slots = Item.getCreativeItems().toArray(Item[]::new);
             this.dataPacket(containerSetContentPacket);
         }
 
@@ -1199,9 +1199,9 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         this.inventory.sendContents(this);
         this.inventory.sendContents(this.getViewers().values());
         this.inventory.sendHeldItem(this.hasSpawned.values());
+
         this.offhandInventory.sendContents(this);
         this.offhandInventory.sendContents(this.getViewers().values());
-
         return true;
     }
 
