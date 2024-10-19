@@ -1,8 +1,8 @@
 # Pure
 Software for Minecraft Bedrock Edition 1.1.x forked Nukkit.
 
-[] Fixed player crafting
-[] Add new generation
+- Fixed player crafting
+- Add new generation
 
 [![](https://jitpack.io/v/olovink/Pure.svg)](https://jitpack.io/#olovink/Pure)
 Java 11 installation
