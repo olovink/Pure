@@ -34,7 +34,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 
     withSourcesJar()
-    // withJavadocJar() // @ddosnikgit cleanun javadoc's please
 }
 
 tasks {

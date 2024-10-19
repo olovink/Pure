@@ -112,7 +112,7 @@ public class Normal extends Generator {
     public NoiseGeneratorOctavesF depthNoise;
 
 
-    private final int seaHeight = 64;
+    private final int seaHeight = 63;
 
     protected float rainfall = 0.5F;
     protected float temperature = 0.5F;
@@ -140,7 +140,7 @@ public class Normal extends Generator {
     }
 
     public Biome pickBiome(int x, int z) {
-        long hash = x * 2345803 ^ z * 9236449 ^ this.level.getSeed();
+        long hash = x * 2345803L ^ z * 9236449L ^ this.level.getSeed();
         hash *= hash + 223;
 
         long xNoise = hash >> 20 & 3;
@@ -180,7 +180,6 @@ public class Normal extends Generator {
         this.selector.addBiome(Biome.getBiome(RIVER));
         this.selector.addBiome(Biome.getBiome(ICE_PLAINS));
         this.selector.addBiome(Biome.getBiome(BIRCH_FOREST));
-
         this.selector.addBiome(Biome.getBiome(JUNGLE));
         this.selector.addBiome(Biome.getBiome(SAVANNA));
         this.selector.addBiome(Biome.getBiome(ROOFED_FOREST));

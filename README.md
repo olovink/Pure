@@ -2,11 +2,11 @@
 Software for Minecraft Bedrock Edition 1.1.x forked Nukkit.
 
 [![](https://jitpack.io/v/olovink/Pure.svg)](https://jitpack.io/#olovink/Pure)
-Java 8 installation
+Java 11 installation
 -------------
 - `sudo apt-get update && sudo apt-get install default-jdk`
-- `sudo apt-get install openjdk-8-jdk`
-- `update-alternatives --config java`, choose /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+- `sudo apt-get install openjdk-11-jdk`
+- `update-alternatives --config java`, choose /usr/lib/jvm/java-11-openjdk-amd64/jre/bin/java
 - Check java version: `java -version`
 
 Building

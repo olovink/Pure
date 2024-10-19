@@ -39,7 +39,7 @@ public class PopulatorGroundCover extends Populator {
                         if (column[y] == 0x00 && b.isSolid()) {
                             break;
                         }
-                        if (b.getDamage() == 0) {
+                        if (b.getDamage() == 0 || b.canBeReplaced()) {
                             chunk.setBlockId(x, y, z, b.getId());
                         } else {
                             chunk.setBlock(x, y, z, b.getId(), b.getDamage());

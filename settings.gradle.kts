@@ -4,4 +4,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "pure"
+rootProject.name = "newpure"
