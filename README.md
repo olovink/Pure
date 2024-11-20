@@ -1,7 +1,7 @@
 # Pure
 Software for Minecraft Bedrock Edition 1.1.x forked Nukkit.
 
-- Fixed player crafting
+- Fixed crafting and player inventory transactions
 - Add new generation
 
 [![](https://jitpack.io/v/olovink/Pure.svg)](https://jitpack.io/#olovink/Pure)
