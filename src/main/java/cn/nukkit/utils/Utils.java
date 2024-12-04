@@ -164,7 +164,7 @@ public class Utils {
         return true;
     }
 
-    public static <T,U,V> Map<U,V> getOrCreate(Map<T, Map<U, V>> map, T key) {
+    public static <T, U, V> Map<U, V> getOrCreate(Map<T, Map<U, V>> map, T key) {
         Map<U, V> existing = map.get(key);
         if (existing == null) {
             ConcurrentHashMap<U, V> toPut = new ConcurrentHashMap<>();
@@ -194,7 +194,38 @@ public class Utils {
         long result = (int) r & 0xff;
         result |= ((int) g & 0xff) << 8;
         result |= ((int) b & 0xff) << 16;
-        result |= ((int) a & 0xff) << 24;
+        result |= (long) ((int) a & 0xff) << 24;
         return result & 0xFFFFFFFFL;
+    }
+
+    public static long toABGR(int argb) {
+        long result = argb & 0xFF00FF00L;
+        result |= (argb << 16) & 0x00FF0000L; // B to R
+        result |= (argb >>> 16) & 0xFFL; // R to B
+        return result & 0xFFFFFFFFL;
+    }
+
+    /**
+     * A way to tell the java compiler to do not replace the users of a {@code public static final int} constant
+     * with the value defined in it, forcing the JVM to get the value directly from the class, preventing
+     * binary incompatible changes.
+     *
+     * @param value The value to be assigned to the field.
+     * @return The same value that was passed as parameter
+     */
+    public static int dynamic(int value) {
+        return value;
+    }
+
+    /**
+     * A way to tell the java compiler to do not replace the users of a {@code public static final} constant
+     * with the value defined in it, forcing the JVM to get the value directly from the class, preventing
+     * binary incompatible changes.
+     *
+     * @param value The value to be assigned to the field.
+     * @return The same value that was passed as parameter
+     */
+    public static <T> T dynamic(T value) {
+        return value;
     }
 }

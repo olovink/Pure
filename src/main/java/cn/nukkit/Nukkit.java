@@ -1,7 +1,5 @@
 package cn.nukkit;
 
-import cn.nukkit.network.protocol.ProtocolInfo;
-import cn.nukkit.utils.ServerKiller;
 
 import com.google.common.base.Preconditions;
 import joptsimple.OptionParser;
@@ -15,18 +13,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
+
+import java.util.Locale;
+
+import static cn.nukkit.utils.Utils.dynamic;
+
 @Log4j2
 public class Nukkit {
 
-    public final static String NAME = "Pure";
-    public final static String VERSION = "1.0.2";
-    public final static String API_VERSION = "1.0.0";
-    public final static String CODENAME = "PureTeam";
-    @Deprecated
-    public final static String MINECRAFT_VERSION = ProtocolInfo.MINECRAFT_VERSION;
-    @Deprecated
-    public final static String MINECRAFT_VERSION_NETWORK = ProtocolInfo.MINECRAFT_VERSION_NETWORK;
-
+    public final static String NAME = dynamic("Pure");
+    public final static String VERSION = dynamic("1.0.2");
+    public final static String API_VERSION = dynamic("1.0.0");
+    public final static String CODENAME = dynamic("PureTeam");
     public final static String PATH = System.getProperty("user.dir") + "/";
     public final static String DATA_PATH = System.getProperty("user.dir") + "/";
     public final static String PLUGIN_PATH = DATA_PATH + "plugins";
@@ -38,10 +36,15 @@ public class Nukkit {
 
     public static void main(String[] args) {
 
+        // Force IPv4 since Nukkit is not compatible with IPv6
         System.setProperty("java.net.preferIPv4Stack" , "true");
         System.setProperty("log4j.skipJansi", "false");
         System.getProperties().putIfAbsent("io.netty.allocator.type", "unpooled"); // Disable memory pooling unless specified
 
+        // Force Mapped ByteBuffers for LevelDB till fixed.
+        System.setProperty("leveldb.mmap", "true");
+
+        // Netty logger for debug info
         InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
 
         // Define args
@@ -89,24 +92,18 @@ public class Nukkit {
             if (!(thread instanceof InterruptibleThread)) {
                 continue;
             }
+            log.info("Stopping {} thread", thread.getClass().getSimpleName());
             if (thread.isAlive()) {
                 thread.interrupt();
             }
         }
 
-        ServerKiller killer = new ServerKiller(8);
-        killer.start();
-
         LogManager.shutdown();
-
-        if (TITLE) {
-            System.out.print((char) 0x1b + "]0;Server Stopped" + (char) 0x07);
-        }
-        System.exit(0);
+        Runtime.getRuntime().halt(0); // force exit
     }
 
     private static boolean reqShortTitle() {
-        String osName = System.getProperty("os.name").toLowerCase();
+        String osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
         return osName.contains("windows") &&(osName.contains("windows 8") || osName.contains("2012"));
     }
 

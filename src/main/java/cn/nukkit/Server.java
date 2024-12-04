@@ -726,13 +726,7 @@ public class Server {
     }
 
     public int getNumOnlinePlayers() {
-        List<Player> players = new ArrayList<>();
-        for (Player player : this.getOnlinePlayers().values()) {
-            if (player.isOnline()) {
-                players.add(player);
-            }
-        }
-        return players.toArray(new Player[players.size()]).length;
+        return this.getOnlinePlayers().size();
     }
 
     public void shutdown() {
@@ -844,7 +838,6 @@ public class Server {
         getScheduler().scheduleDelayedTask(new Task() {
             @Override
             public void onRun(int currentTick) {
-                System.runFinalization();
                 System.gc();
             }
         }, 60);
@@ -860,22 +853,8 @@ public class Server {
 
                     if (next - 0.1 > current) {
                         long allocated = next - current - 1;
-
-                        { // Instead of wasting time, do something potentially useful
-                            int offset = 0;
-                            for (int i = 0; i < levelArray.length; i++) {
-                                offset = (i + lastLevelGC) % levelArray.length;
-                                Level level = levelArray[offset];
-                                level.getProvider().doGarbageCollection();
-                                allocated = next - System.currentTimeMillis();
-                                if (allocated <= 0) {
-                                    break;
-                                }
-                            }
-                            lastLevelGC = offset + 1;
-                        }
-
                         if (allocated > 0) {
+                            //noinspection BusyWait
                             Thread.sleep(allocated, 900000);
                         }
                     }
@@ -1059,28 +1038,31 @@ public class Server {
         }
     }
 
-    private boolean tick() {
+    private void tick() {
         long tickTime = System.currentTimeMillis();
-        long tickTimeNano = System.nanoTime();
-        if ((tickTime - this.nextTick) < -25) {
-            return false;
+
+        long time = tickTime - this.nextTick;
+        if (time < -25) {
+            try {
+                Thread.sleep(Math.max(5, -time - 25));
+            } catch (InterruptedException e) {
+                log.debug("The thread {} got interrupted", Thread.currentThread().getName(), e);
+            }
         }
 
-        Timings.fullServerTickTimer.startTiming();
+        long tickTimeNano = System.nanoTime();
+        if ((tickTime - this.nextTick) < -25) {
+            return;
+        }
 
         ++this.tickCounter;
-
-        Timings.connectionTimer.startTiming();
         this.network.processInterfaces();
 
         if (this.rcon != null) {
             this.rcon.check();
         }
-        Timings.connectionTimer.stopTiming();
 
-        Timings.schedulerTimer.startTiming();
         this.scheduler.mainThreadHeartbeat(this.tickCounter);
-        Timings.schedulerTimer.stopTiming();
 
         this.checkTickUpdates(this.tickCounter, tickTime);
 
@@ -1096,15 +1078,10 @@ public class Server {
             if ((this.tickCounter & 0b111111111) == 0) {
                 try {
                     this.getPluginManager().callEvent(this.queryRegenerateEvent = new QueryRegenerateEvent(this, 5));
-                    if (this.queryHandler != null) {
-                        this.queryHandler.regenerateInfo();
-                    }
                 } catch (Exception e) {
-                    log.throwing(e);
+                    log.error("", e);
                 }
             }
-
-            this.getNetwork().updateName();
         }
 
         if (this.autoSave && ++this.autoSaveTicker >= this.autoSaveTicks) {
@@ -1123,11 +1100,7 @@ public class Server {
                     .toArray(CompletableFuture[]::new));
         }
 
-        Timings.fullServerTickTimer.stopTiming();
-        //long now = System.currentTimeMillis();
         long nowNano = System.nanoTime();
-        //float tick = Math.min(20, 1000 / Math.max(1, now - tickTime));
-        //float use = Math.min(1, (now - tickTime) / 50);
 
         float tick = (float) Math.min(20, 1000000000 / Math.max(1000000, ((double) nowNano - tickTimeNano)));
         float use = (float) Math.min(1, ((double) (nowNano - tickTimeNano)) / 50000000);
@@ -1151,8 +1124,6 @@ public class Server {
         } else {
             this.nextTick += 50;
         }
-
-        return true;
     }
 
     // TODO: Fix title tick
@@ -1177,8 +1148,6 @@ public class Server {
                 " | Load " + this.getTickUsage() + "%" + (char) 0x07;
 
         System.out.print(title);
-
-        this.network.resetStatistics();
     }
 
     public QueryRegenerateEvent getQueryInformation() {

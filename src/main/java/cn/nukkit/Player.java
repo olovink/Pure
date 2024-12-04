@@ -514,18 +514,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         }
         if (count > 0) {
             pk.commands = new Gson().toJson(data);
-            int identifier = this.dataPacket(pk, true); // We *need* ACK so we can be sure that the client received the packet or not
-            Thread t = new Thread(() -> {
-                // We are going to wait 3 seconds, if after 3 seconds we didn't receive a reply from the client, resend the packet.
-                try {
-                    Thread.sleep(3000);
-                    boolean status = needACK.get(identifier);
-                    if (!status && isOnline()) {
-                        sendCommandData();
-                    }
-                } catch (InterruptedException ignored) {}
-            });
-            t.start();
+            this.dataPacket(pk, true);
         }
     }
 
@@ -1703,19 +1692,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         }
 
         this.checkTeleportPosition();
-
-        // TODO: remove this workaround (broken client MCPE 1.0.0)
-        if (!messageQueue.isEmpty()) {
-            TextPacket pk = new TextPacket();
-            pk.type = TextPacket.TYPE_RAW;
-            pk.message = String.join("\n", messageQueue);
-            this.dataPacket(pk);
-            messageQueue.clear();
-        }
         return true;
     }
-
-    private ArrayList<String> messageQueue = new ArrayList<>();
 
     public void checkNetwork() {
         if (!this.isOnline()) {
@@ -1789,7 +1767,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         CompoundTag nbt = this.server.getOfflinePlayerData(this.username);
         if (nbt == null) {
             this.close(this.getLeaveMessage(), "Invalid data");
-
             return;
         }
 
@@ -3806,15 +3783,10 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
     @Override
     public void sendMessage(String message) {
-        // TODO: Remove this workaround (broken client MCPE 1.0.0)
-        messageQueue.add(this.server.getLanguage().translateString(message));
-
-        /*
         TextPacket pk = new TextPacket();
         pk.type = TextPacket.TYPE_RAW;
         pk.message = this.server.getLanguage().translateString(message);
         this.dataPacket(pk);
-        */
     }
 
     @Override
@@ -3837,7 +3809,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             pk.message = this.server.getLanguage().translateString(message, parameters, "nukkit.");
             for (int i = 0; i < parameters.length; i++) {
                 parameters[i] = this.server.getLanguage().translateString(parameters[i], parameters, "nukkit.");
-
             }
             pk.parameters = parameters;
         } else {
@@ -4386,7 +4357,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             if (!damager.onGround) {
                 NukkitRandom random = new NukkitRandom();
                 for (int i = 0; i < 5; i++) {
-                    CriticalParticle par = new CriticalParticle(new Vector3(this.x + random.nextRange(-15, 15) / 10, this.y + random.nextRange(0, 20) / 10, this.z + random.nextRange(-15, 15) / 10));
+                    CriticalParticle par = new CriticalParticle(new Vector3(this.x + (double) random.nextRange(-15, 15) / 10, this.y + random.nextRange(0, 20) / 10, this.z + random.nextRange(-15, 15) / 10));
                     this.getLevel().addParticle(par);
                 }
 
