@@ -1661,20 +1661,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     this.inAirTicks = 0;
                     this.highestPosition = this.y;
                 } else {
-                    if (!this.isGliding() && !server.getAllowFlight() && !this.getAdventureSettings().canFly() && this.inAirTicks > 10 && !this.isSleeping() && !this.isImmobile()) {
-                        double expectedVelocity = (-this.getGravity()) / ((double) this.getDrag()) - ((-this.getGravity()) / ((double) this.getDrag())) * Math.exp(-((double) this.getDrag()) * ((double) (this.inAirTicks - this.startAirTicks)));
-                        double diff = (this.speed.y - expectedVelocity) * (this.speed.y - expectedVelocity);
-
-                        if (!this.hasEffect(Effect.JUMP) && diff > 0.6 && expectedVelocity < this.speed.y) {
-                            if (this.inAirTicks < 100) {
-                                //this.sendSettings();
-                                this.setMotion(new Vector3(0, expectedVelocity, 0));
-                            } else if (this.kick(PlayerKickEvent.Reason.FLYING_DISABLED, "Flying is not enabled on this server")) {
-                                return false;
-                            }
-                        }
-                    }
-
                     if (this.y > highestPosition) {
                         this.highestPosition = this.y;
                     }
@@ -1682,7 +1668,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     if (this.isGliding()) this.resetFallDistance();
 
                     ++this.inAirTicks;
-
                 }
 
                 if (this.isSurvival() || this.isAdventure()) {
