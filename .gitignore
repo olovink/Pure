@@ -14,3 +14,15 @@ replay_pid*
 *.log
 *.class
 .DS_Store
+/worlds/
+/plugins/
+/players/
+/logs/
+/banned-ips.json
+/banned-players.json
+/nukkit.yml
+/ops.txt
+/rooti.yml
+/server.properties
+/white-list.txt
+/resource_packs/

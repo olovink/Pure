@@ -2799,9 +2799,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     }
                     break;
 
-                case ProtocolInfo.MOB_ARMOR_EQUIPMENT_PACKET:
-                    break;
-
                 case ProtocolInfo.INTERACT_PACKET:
                     if (!this.spawned || !this.isAlive()) {
                         break;
@@ -3046,8 +3043,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     }
                     this.craftingType = 0;
                     CommandStepPacket commandStepPacket = (CommandStepPacket) packet;
-                    String commandText = commandStepPacket.command;
-                    Command command = this.getServer().getCommandMap().getCommand(commandText);
+                    StringBuilder commandText = new StringBuilder(commandStepPacket.command);
+                    Command command = this.getServer().getCommandMap().getCommand(commandText.toString());
                     if (command != null) {
                         if (commandStepPacket.args != null && commandStepPacket.args.size() > 0) {
                             CommandParameter[] pars = command.getCommandParameters(commandStepPacket.overload);
@@ -3058,20 +3055,20 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                                         switch (par.type) {
                                             case CommandParameter.ARG_TYPE_TARGET:
                                                 CommandArg rules = new Gson().fromJson(arg, CommandArg.class);
-                                                commandText += " " + rules.getRules()[0].getValue();
+                                                commandText.append(" ").append(rules.getRules()[0].getValue());
                                                 break;
                                             case CommandParameter.ARG_TYPE_BLOCK_POS:
                                                 CommandArgBlockVector bv = new Gson().fromJson(arg, CommandArgBlockVector.class);
-                                                commandText += " " + bv.getX() + " " + bv.getY() + " " + bv.getZ();
+                                                commandText.append(" ").append(bv.getX()).append(" ").append(bv.getY()).append(" ").append(bv.getZ());
                                                 break;
                                             case CommandParameter.ARG_TYPE_STRING:
                                             case CommandParameter.ARG_TYPE_STRING_ENUM:
                                             case CommandParameter.ARG_TYPE_RAW_TEXT:
                                                 String string = new Gson().fromJson(arg, String.class);
-                                                commandText += " " + string;
+                                                commandText.append(" ").append(string);
                                                 break;
                                             default:
-                                                commandText += " " + arg.toString();
+                                                commandText.append(" ").append(arg.toString());
                                                 break;
                                         }
                                     }
