@@ -300,7 +300,7 @@ public class Session {
             if (this.splitPackets.size() >= MAX_SPLIT_COUNT) {
                 return;
             }
-            this.splitPackets.put(packet.splitID, new HashMap<Integer, EncapsulatedPacket>() {{
+            this.splitPackets.put(packet.splitID, new HashMap<>() {{
                 put(packet.splitIndex, packet);
             }});
         } else {
