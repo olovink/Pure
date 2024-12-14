@@ -1,4 +1,7 @@
 # Pure
+
+[![](https://jitpack.io/v/olovink/Pure.svg)](https://jitpack.io/#olovink/Pure)
+
 Software for Minecraft Bedrock Edition 1.1.x forked Nukkit.
 
 - Fixed crafting and player inventory transactions
