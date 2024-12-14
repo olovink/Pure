@@ -41,13 +41,13 @@ public class ContainerSetContentPacket extends DataPacket {
         int count = (int) this.getUnsignedVarInt();
         this.slots = new Item[count];
 
-        for (int s = 0; s < count && !this.feof(); ++s) {
+        for (int s = 0; s < count && this.feof(); ++s) {
             this.slots[s] = this.getSlot();
         }
 
         count = (int) this.getUnsignedVarInt();
         this.hotbar = new int[count];
-        for (int s = 0; s < count && !this.feof(); ++s) {
+        for (int s = 0; s < count && this.feof(); ++s) {
             this.hotbar[s] = this.getVarInt();
         }
     }

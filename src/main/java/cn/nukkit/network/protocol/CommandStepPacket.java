@@ -51,7 +51,7 @@ public class CommandStepPacket extends DataPacket {
         String argsString = this.getString();
         this.args = new Gson().fromJson(argsString, CommandArgs.class);
         this.outputJson = this.getString();
-        while (!this.feof()) {
+        while (this.feof()) {
             this.getByte(); //prevent assertion errors. TODO: find out why there are always 3 extra bytes at the end of this packet.
         }
 

@@ -20,7 +20,7 @@ import java.util.UUID;
 public class BinaryStream {
 
     public int offset;
-    private byte[] buffer = new byte[32];
+    private byte[] buffer;
     private int count;
 
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
@@ -229,7 +229,7 @@ public class BinaryStream {
             }
         }
 
-        return list.stream().toArray(Attribute[]::new);
+        return list.toArray(Attribute[]::new);
     }
 
     /**
@@ -410,7 +410,7 @@ public class BinaryStream {
     }
 
     public boolean feof() {
-        return this.offset < 0 || this.offset >= this.buffer.length;
+        return this.offset >= 0 && this.offset < this.buffer.length;
     }
 
     private void ensureCapacity(int minCapacity) {
