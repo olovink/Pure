@@ -5,11 +5,13 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
+    maven("https://jitpack.io")
 }
 
 group = "com.purenex"
-version = "1.0-SNAPSHOT"
+version = "1.1"
 
 dependencies {
     implementation("jline:jline:2.14.6")
@@ -51,9 +53,14 @@ tasks {
 }
 
 publishing {
-    publications {
-        register<MavenPublication>("gpr") {
-            from(components["java"])
+    publications.create<MavenPublication>("maven") {
+        from(components["java"])
+        pom {
+            repositories {
+                mavenLocal()
+                mavenCentral()
+                maven("https://jitpack.io")
+            }
         }
     }
 }
