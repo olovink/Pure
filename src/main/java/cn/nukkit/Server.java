@@ -965,15 +965,8 @@ public class Server {
     }
 
     private void checkTickUpdates(int currentTick, long tickTime) {
-        for (Player p : new ArrayList<>(this.players.values())) {
-            /*if (!p.loggedIn && (tickTime - p.creationTime) >= 10000 && p.kick(PlayerKickEvent.Reason.LOGIN_TIMEOUT, "Login timeout")) {
-                continue;
-            }
-
-            client freezes when applying resource packs
-            todo: fix*/
-
-            if (this.alwaysTickPlayers) {
+        if (this.alwaysTickPlayers) {
+            for (Player p : new ArrayList<>(this.players.values())) {
                 p.onUpdate(currentTick);
             }
         }
@@ -986,6 +979,7 @@ public class Server {
 
             try {
                 long levelTime = System.currentTimeMillis();
+
                 level.doTick(currentTick);
                 int tickMs = (int) (System.currentTimeMillis() - levelTime);
                 level.tickRateTime = tickMs;
@@ -1083,6 +1077,8 @@ public class Server {
                 }
             }
         }
+
+        this.getNetwork().updateName();
 
         if (this.autoSave && ++this.autoSaveTicker >= this.autoSaveTicks) {
             this.autoSaveTicker = 0;

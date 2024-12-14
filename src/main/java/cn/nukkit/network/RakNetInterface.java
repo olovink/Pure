@@ -3,7 +3,6 @@ package cn.nukkit.network;
 import cn.nukkit.Nukkit;
 import cn.nukkit.Player;
 import cn.nukkit.Server;
-import cn.nukkit.utils.ThreadedLogger;
 import cn.nukkit.event.player.PlayerCreationEvent;
 import cn.nukkit.event.server.QueryRegenerateEvent;
 import cn.nukkit.network.protocol.BatchPacket;
@@ -21,7 +20,6 @@ import cn.nukkit.utils.Utils;
 import cn.nukkit.utils.Zlib;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.message.FormattedMessage;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
