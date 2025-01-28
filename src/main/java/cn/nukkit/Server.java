@@ -438,7 +438,9 @@ public class Server {
         Generator.addGenerator(Nether.class, "nether", Generator.TYPE_NETHER);
         //todo: add old generator and hell generator
 
-        for (String name : ((Map<String, Object>) this.getConfig("worlds", new HashMap<>())).keySet()) {
+        Map<String, Object> worldsConfig = (Map<String, Object>) this.getConfig("worlds", new HashMap<>());
+
+        for (String name : worldsConfig.keySet()) {
             if (!this.loadLevel(name)) {
                 long seed;
                 try {
@@ -451,13 +453,13 @@ public class Server {
                 String[] opts = ((String) this.getConfig("worlds." + name + ".generator", Generator.getGenerator("default").getSimpleName())).split(":");
                 Class<? extends Generator> generator = Generator.getGenerator(opts[0]);
                 if (opts.length > 1) {
-                    String preset = "";
+                    StringBuilder preset = new StringBuilder();
                     for (int i = 1; i < opts.length; i++) {
-                        preset += opts[i] + ":";
+                        preset.append(opts[i]).append(":");
                     }
-                    preset = preset.substring(0, preset.length() - 1);
+                    preset = new StringBuilder(preset.substring(0, preset.length() - 1));
 
-                    options.put("preset", preset);
+                    options.put("preset", preset.toString());
                 }
 
                 this.generateLevel(name, seed, generator, options);
@@ -476,7 +478,7 @@ public class Server {
                 long seed;
                 String seedString = String.valueOf(this.getProperty("level-seed", System.currentTimeMillis()));
                 try {
-                    seed = Long.valueOf(seedString);
+                    seed = Long.parseLong(seedString);
                 } catch (NumberFormatException e) {
                     seed = seedString.hashCode();
                 }
@@ -503,6 +505,7 @@ public class Server {
 
         this.start();
     }
+
 
     public int broadcastMessage(String message) {
         return this.broadcast(message, BROADCAST_CHANNEL_USERS);
@@ -573,7 +576,7 @@ public class Server {
     }
 
     public static void broadcastPacket(Collection<Player> players, DataPacket packet) {
-        broadcastPacket(players.stream().toArray(Player[]::new), packet);
+        broadcastPacket(players.toArray(Player[]::new), packet);
     }
 
     public static void broadcastPacket(Player[] players, DataPacket packet) {
@@ -831,8 +834,6 @@ public class Server {
             this.getNetwork().blockAddress(address, 600);
         }
     }
-
-    int lastLevelGC;
 
     public void tickProcessor() {
         getScheduler().scheduleDelayedTask(new Task() {
